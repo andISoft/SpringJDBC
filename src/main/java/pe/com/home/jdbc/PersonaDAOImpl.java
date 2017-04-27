@@ -5,9 +5,12 @@ import java.util.List;
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.ParameterizedBeanPropertyRowMapper;
 import org.springframework.stereotype.Repository;
 
@@ -43,7 +46,8 @@ public class PersonaDAOImpl implements PersonaDAO {
 
 	@Override
 	public void insertPersona(Persona persona) {
-		// TODO Auto-generated method stub
+		SqlParameterSource parameterSource = new BeanPropertySqlParameterSource(persona);
+		this.namedParameterJdbcTemplate.update(SQL_INSERT_PERSONA, parameterSource);
 
 	}
 
@@ -61,8 +65,17 @@ public class PersonaDAOImpl implements PersonaDAO {
 
 	@Override
 	public Persona findPersonaById(long idPersona) {
-		// TODO Auto-generated method stub
-		return null;
+		Persona persona = null;
+		try{
+			//Utilizamos la clase PersonaRowMapper
+			persona = jdbcTemplate.queryForObject(SQL_SELECT_PERSONA_BY_ID,new PersonaRowMapper(),idPersona);
+		}catch(EmptyResultDataAccessException e){
+			persona = null;
+		}
+		return persona;
+		// Esta es otra forma sin utilizar la clase PersonaRowMapper 
+		// BeanPropertyRowMapper<Persona> personaRowMapper = BeanPropertyRowMapper.newInstance(Persona.class); 
+		// return jdbcTemplate.queryForObject(SQL_SELECT_PERSONA_BY_ID, personaRowMapper, idPersona);
 	}
 
 	@Override
@@ -75,8 +88,13 @@ public class PersonaDAOImpl implements PersonaDAO {
 
 	@Override
 	public int contadorPersonasPorNombre(Persona persona) {
-		// TODO Auto-generated method stub
-		return 0;
+		String sql = "SELECT count(*) FROM PERSONA WHERE nombre = :nombre"; 
+		// Permite evitar crear un MAP de parametros y utilizar directamente el objeto persona 
+		// los atributos que coincidan con el nombre de los parametros por nombre del query 
+		// seran utilizados y proporcionados como atributos al query 
+		SqlParameterSource namedParameters = new BeanPropertySqlParameterSource(persona); 
+		// Unicamente retorna un valor el metodo queryForInt 
+		return this.namedParameterJdbcTemplate.queryForInt(sql, namedParameters);
 	}
 
 	@Override
@@ -89,8 +107,11 @@ public class PersonaDAOImpl implements PersonaDAO {
 
 	@Override
 	public Persona getPersonaByEmail(Persona persona) {
-		// TODO Auto-generated method stub
-		return null;
+		String sql = "SELECT * FROM PERSONA WHERE email = :email"; 
+		SqlParameterSource namedParameters = new BeanPropertySqlParameterSource(persona); 
+		//Si no se tiene el objeto RowMapper, se puede utilizar la siguiente linea para crear este objeto 
+		//RowMapper<Persona> personaRowMapper = ParameterizedBeanPropertyRowMapper.newInstance(Persona.class); 
+		return this.namedParameterJdbcTemplate.queryForObject(sql, namedParameters, new PersonaRowMapper());
 	}
 
 }
