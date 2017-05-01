@@ -53,13 +53,15 @@ public class PersonaDAOImpl implements PersonaDAO {
 
 	@Override
 	public void updatePersona(Persona persona) {
-		// TODO Auto-generated method stub
+		SqlParameterSource parameterSource = new BeanPropertySqlParameterSource(persona);
+		this.namedParameterJdbcTemplate.update(SQL_UPDATE_PERSONA, parameterSource);
 
 	}
 
 	@Override
 	public void deletePersona(Persona persona) {
-		// TODO Auto-generated method stub
+		SqlParameterSource parameterSource = new BeanPropertySqlParameterSource(persona);
+		this.namedParameterJdbcTemplate.update(SQL_DELETE_PERSONA, parameterSource);
 
 	}
 
